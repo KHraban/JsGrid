@@ -10,7 +10,7 @@ Features:
  - column reordering
  - column sorting
  - collection navigation (paging)
- - numeric data agregation operations
+ - numeric data aggregation operations
  - tooltips
  - collection filtering (searching)
  - linking additional resources to collection items
