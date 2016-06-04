@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>JsGrid demo</title>
+    <link rel="stylesheet" href="styles.css"/>
+    <script type="text/javascript" src="jsgrid.js"></script>
+    <script type="text/javascript">
+        window.addEventListener("load", function () {
+            jsGrid.init({
+                tableId: "sampleGrid",
+                locale: "en-US",//"ar-EG",
+                caption: "Sample grid",
+                draggableColumns: true,
+                //column settings
+                columnModel: [//array of objects
+                    {
+                        label: "Name",//string label
+                        name: "name",
+                        required: true,
+                        editable: true,
+                        width: 200,
+                        resizable: true
+                    },
+                    {
+                        label: "Gender",//string label
+                        name: "gender",
+                        required: true,
+                        editable: true,
+                        width: 100,
+                        type: [
+                            {value: "male", text: "Male"},
+                            {value: "female", text: "Female"}
+                        ],
+                        resizable: true
+                    },
+                    {
+                        label: "Age",//string label
+                        name: "age",
+                        required: true,
+                        editable: true,
+                        width: 100,
+                        type: "int",
+                        resizable: true,
+                        footer: {
+                            formatString: "Average value: {0}",
+                            aggregationMethod: "avg"
+                        }
+                    },
+                    {
+                        label: "Company",//string label
+                        name: "company",
+                        editable: true,
+                        width: 200,
+                        resizable: true
+                    },
+                    {
+                        label: "Address",//string label
+                        name: "address",
+                        type: "longString",
+                        required: true,
+                        editable: true,
+                        width: 300,
+                        resizable: true
+                    },
+                    {
+                        label: "Registration date",//string label
+                        name: "registered",
+                        width: 300,
+                        minWidth: 200,
+                        maxWidth: 500,
+                        type: "date",
+                        editable: true,
+                        resizable: true
+                    },
+                    {
+                        label: "About",//string label
+                        name: "about",
+                        width: 400,
+                        type: "longString",
+                        editable: true,
+                        resizable: true
+                    },
+                    {
+                        label: "Is active",//string label
+                        name: "isActive",
+                        width: 100,
+                        type: "bool",
+                        resizable: true
+                    }
+                ],
+                // function(collectionRequestBuilder),  which will be called each time new collection (or part of it) is requested in case of pager presence, and never otherwise.
+                // - collectionRequestBuilder.performRequest accepts requested collection's url, since it may be different for each collection in RESTfull architecture.
+                // For example, rel first, rel last, rel prev, rel next collection's link urls can be stored when processing data in dataProcessor function with collectionBuilder.addLink(key, value),
+                // and then retrieved here with collectionRequestBuilder.getLink(key) to request a different collection.
+                // - collectionRequestBuilder.skipRequest() allows to skip collection request and call dataProcessor(null, collectionBuilder) in case user works with some kind of local/cached data.
+                // - trigger is a string flag of the change, which caused the request (dataLoad, firstPage, lastPage, prevPage, nextPage, page, rowsPerPage)
+                collectionRequestProcessor: function(collectionRequestBuilder, trigger) {
+                    var pageNumber = collectionRequestBuilder.getPageNumber(),
+                            rowsPerPage = collectionRequestBuilder.getRowsPerPage();
+                    collectionRequestBuilder.addParam("skip", (pageNumber - 1) * rowsPerPage);
+                    collectionRequestBuilder.addParam("take", rowsPerPage);
+                    collectionRequestBuilder.performRequest("/JsGrid/generated.json");
+                },
+                dataReader: {
+                    dataType: "json",
+                    // function(data, collectionBuilder), which will be called each time new data is received
+                    // Should use collectionBuilder, to construct and populate rows
+                    // - collectionBuilder.createTableRow accepts item's url, for update/delete operations on collection's items (PUT/DELETE)
+                    // - collectionBuilder.applyChanges accepts collection's url for retrieving data & creating new items ( GET & POST to append)
+                    dataProcessor: function (data, collectionBuilder) {
+                        //This one mimics partial data retrieval, since the whole .json file is actually obtained
+                        var i,
+                                row,
+                                link,
+                                dataItem,
+                                rowsPerPage = collectionBuilder.getRowsPerPage(),
+                                pageNumber = collectionBuilder.getPageNumber(),
+                                skip = (pageNumber - 1) * rowsPerPage;
+                        for(i = 0; i < rowsPerPage; i += 1)
+                        {
+                            dataItem = data[((pageNumber - 1) * rowsPerPage) + i];
+                            if(!dataItem)
+                                continue;
+                            row = collectionBuilder.createTableRow("api/users/" + data[skip + i].guid);
+                            row.addCell("name", data[skip + i].name);
+                            row.addCell("gender", data[skip + i].gender);
+                            row.addCell("age", data[skip + i].age);
+                            row.addCell("company", data[skip + i].company);
+                            row.addCell("address", data[skip + i].address);
+                            row.addCell("registered", new Date(data[skip + i].registered));
+                            row.addCell("isActive", data[skip + i].isActive);
+                            row.addCell("about", data[skip + i].about);
+                            //hidden values are not rendered as HTML, but are submitted to server
+                            row.addHiddenValue("id", data[skip + i]._id);
+                            //add resource links for some of the resources
+                            if(i % 2 === 0)
+                            {
+                                link = collectionBuilder.createLink("https://www.google.com");
+                                link.setPrompt("Some link for resource: " + data[skip + i].name);
+                                row.addLink("res1",link);
+                                link = collectionBuilder.createLink("https://www.google.com");
+                                link.setPrompt("Some other link for resource: " + data[skip + i].name);
+                                row.addLink("res2",link);
+                            }
+
+                            collectionBuilder.addRow(row);
+                        }
+                        //set items count in case pager is present and collection has been modified
+                        collectionBuilder.setItemsCount(data.length);
+                        //push collection to the grid
+                        collectionBuilder.applyChanges("/JsGrid/generated.json");
+                    }
+                },
+                //navigator actions and pager settings
+                navigator: {
+                    displayActions: true,
+                    actions: {
+                        addAction: true,
+                        deleteAction: true,
+                        editAction: true,
+                        searchAction: true,
+                        linkAction: true,
+                        reloadAction: true
+                    },
+                    displayPager: true,
+                    pager: {
+                        rowsPerPage: [5, 10],
+                        itemsCount: 34
+                    }
+                },
+                searchTemplate: [
+                    {name: "name", prompt: "Name"},
+                    {name: "gender", prompt: "Gender", type: [
+                        {value: "male", text: "Male"},
+                        {value: "female", text: "Female"}
+                    ]},
+                    {name: "age", prompt: "Age", type: "int"},
+                    {name: "company", prompt: "Company"},
+                    {name: "registered_start", prompt: "Registration start date", type: "date"},
+                    {name: "registered_end", prompt: "Registration end date", type: "date"},
+                    {name: "is_active", prompt: "Is active", type: "bool"}
+                ],
+                //uncomment to see resource usage in action
+//                resources: {
+//                    addActionTitle: "Создать",
+//                    deleteActionTitle: "Удалить",
+//                    editActionTitle: "Редактировать",
+//                    searchActionTitle: "Поиск",
+//                    linkActionTitle: "Ссылки",
+//                    reloadActionTitle: "Обновить",
+//                    firstPageActionTitle: "Первая страница",
+//                    previousPageActionTitle: "Предидущая страница",
+//                    nextPageActionTitle: "Следующая страница",
+//                    lastPageActionTitle: "Последняя страница",
+//                    pageLabel: "Страница",
+//                    ofLabel: "из",
+//                    filtersAppliedLabel: "(С фильтрами)",
+//                    noFiltersAppliedLabel: "(Без фильтров)",
+//                    editRecordTitle: "Редактировать запись",
+//                    addRecordTitle: "Добавить запись",
+//                    searchTitle: "Поиск",
+//                    monthLabel: "Месяц",
+//                    dayLabel: "День",
+//                    yearLabel: "Год",
+//                    defaultOptionText: "Выбрать...",
+//                    resetSearchFiltersLabel : "Сбросить",
+//                    deleteRowConfirmationMessage: "Вы действительно хотите удалить запись?",
+//                    isNumberInstructionMessage: "Значение должно быть числом, например 1, 3.14 or 2010",
+//                    isAlphaNumInstructionMessage: "значение должно содержать только буквы и цифры, без специальных символов",
+//                    isNotEmptyInstructionMessage: "значение не может быть пустым",
+//                    invalidValueMessage: "Неверное значение для"
+//                },
+                //function(statusCode, statusText), which will be called each time http response code is other than 200
+                requestErrorHandler: function (responseCode, responsetext) {
+                    console.log("Something may be wrong :( Status code: " + responseCode + ". Status text: " + responsetext);
+                }
+            });
+        }, false);
+    </script>
+</head>
+<body>
+    <div class="list">
+        <ul>
+            <li>Drag column's right corner to resize it</li>
+            <li>Click column's name to sort table rows by this column's values</li>
+            <li>Drag column's header cell left and right, to reorder columns' positions</li>
+            <li>Use paging controls to navigate collection back and forward & change amount of displayed items</li>
+            <li>Hover mouse over "longString" type cells (<strong>"Address"</strong> & <strong>"About"</strong> columns) to see full content in a tooltip</li>
+            <li>Set up column's footer to perform aggregation operations (MIN, MAX, SUM, AVG) on numeric data</li>
+            <li>Select row & use navigator's <strong>Add</strong>, <strong>Delete</strong> & <strong>Edit</strong> action buttons to perform CRUD operations on the collection's data</li>
+            <li>Use navigator's <strong>Search</strong> action button to apply filters to the requested data</li>
+            <li>Use navigator's <strong>Reload</strong> action button to request current page once again</li>
+            <li>Use navigator's <strong>Links</strong> action button to view additional resources, connected to the selected resource item</li>
+        </ul>
+    </div>
+    <div style="clear: both;"></div>
+    <table id="sampleGrid" ></table>
+</body>
+</html>

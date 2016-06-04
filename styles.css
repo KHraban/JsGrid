@@ -1,0 +1,88 @@
+table, th, td {
+    border: 1px solid black;
+    padding: 5px;
+    text-align: center;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+th {
+    cursor: grab;
+}
+th span {
+    cursor: pointer;
+}
+.jsgrid-dragged {
+    background-color: lightgrey;
+    opacity: 0.5;
+    cursor: grabbing;
+}
+.list {
+    position: relative;
+    float: left;
+}
+.jsgrid-selected-row {
+    background-color: lightgrey;
+}
+tfoot a {
+    color: blue;
+    font-size: large;
+}
+tfoot a.jsgrid-disabled {
+    color: grey;
+}
+thead tr, tfoot tr:last-child {
+    background-color: darkgrey;
+}
+.jsgrid-modal-controls {
+    padding: 10px;
+    background-color: lightgray;
+    text-align: right;
+}
+.jsgrid-modal-controls button {
+    font-size: large;
+    margin: 0 5px;
+}
+.jsgrid-modal-controls-ok {
+    color: green;
+    width: 70px;
+}
+.jsgrid-modal-controls-cancel {
+    color: red;
+    width: 70px;
+}
+.jsgrid-modal-content > span {
+    font-size: large;
+    text-align: center;
+    width: 100%;
+    display: inline-block;
+    padding: 5px;
+}
+.jsgrid-modal-content > div {
+    padding: 5px;
+}
+.jsgrid-modal-content .jsgrid-modal-content-messages {
+    background-color: red;
+    border: 2px solid black;
+    padding: 10px 40px;
+    font-weight: bold;
+}
+.jsgrid-modal-content > div:not(:last-child):not(.jsgrid-modal-content-messages) {
+    border-bottom: 1px dotted black;
+}
+.jsgrid-modal-content-right > input[type="text"] {
+    width: 50%;
+    resize: both;
+}
+.jsgrid-modal-content-right > textarea {
+    width: 50%;
+}
+.jsgrid-tooltip {
+    left: 5px;
+    top: 5px;
+    background-color: lightyellow;
+    border: solid black 1px;
+    padding: 5px;
+    font: bold 10pt sansserif;
+}
